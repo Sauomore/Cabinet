@@ -1,0 +1,14 @@
+name = "cabinet-gui"
+version = "0.1.0"
+edition = "2021"
+authors = ["Cabinet Contributors"]
+license = "MIT OR Apache-2.0"
+description = "桌面 GUI 应用 (egui)"
+
+[dependencies
+cabinet-core = { path = "../cabinet-core" }
+eframe = "0.27"
+egui = "0.27"
+
+[dependencies.anyhow]
+workspace = true

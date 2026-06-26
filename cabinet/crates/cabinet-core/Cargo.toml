@@ -1,0 +1,22 @@
+[package]
+name = "cabinet-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "核心编排层：Memory 管理、三层架构、并发控制"
+
+[dependencies]
+cabinet-hsh = { workspace = true }
+cabinet-index = { workspace = true }
+cabinet-store = { workspace = true }
+cabinet-router = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }
+parking_lot = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3.10"

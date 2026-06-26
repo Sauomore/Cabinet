@@ -1,0 +1,21 @@
+[package]
+name = "cabinet-tools"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Cabinet 离线工具链：聚类中心构建、种子表搜索、语料预处理"
+
+[[bin]]
+name = "cabinet-build"
+path = "src/main.rs"
+
+[dependencies]
+cabinet-hsh = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = "1.0"
+indicatif = "0.17"
+rayon = { workspace = true }

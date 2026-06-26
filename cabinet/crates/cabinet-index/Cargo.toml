@@ -1,0 +1,18 @@
+[package]
+name = "cabinet-index"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "索引层：B-tree 前缀索引、LSM 合并、VByte/Delta 压缩"
+
+[dependencies]
+cabinet-hsh = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3.10"

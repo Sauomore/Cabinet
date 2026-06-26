@@ -1,0 +1,7 @@
+include README.md
+include LICENSE
+include Cargo.toml
+include Cargo.lock
+recursive-include crates *.rs *.toml
+recursive-include crates **/Cargo.toml
+recursive-include pycabinet *.rs *.toml *.py

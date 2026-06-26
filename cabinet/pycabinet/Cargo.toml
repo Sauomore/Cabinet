@@ -1,0 +1,20 @@
+[package]
+name = "pycabinet"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "PyO3 Python 绑定"
+
+[lib]
+name = "pycabinet"
+crate-type = ["cdylib"]
+
+[dependencies]
+cabinet-core = { workspace = true }
+pyo3 = { version = "0.21", features = ["extension-module"] }
+
+[dependencies.anyhow]
+workspace = true

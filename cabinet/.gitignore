@@ -1,0 +1,78 @@
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+Cargo.lock
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyO3 / Maturin
+*.dll
+*.dylib
+*.so
+pycabinet/target/
+pycabinet/wheelhouse/
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.idea/
+*.swp
+*.swo
+*~
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Data / DB
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+agent_memory.db*
+test_*.db*
+backup/
+
+# Logs
+*.log
+launch.log
+
+# Streamlit
+.streamlit/
+
+# Benchmark outputs
+bench/results/
+docs/benchmark/*.json

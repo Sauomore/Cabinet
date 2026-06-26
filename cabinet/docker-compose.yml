@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  cabinet:
+    build: .
+    image: cabinet:latest
+    container_name: cabinet-memory
+    volumes:
+      - ./data:/data
+    environment:
+      - CABINET_PATH=/data/agent_memory.db
+    command: ["stats"]
+
+  cabinet-gui:
+    build:
+      context: ../cabinet-gui
+      dockerfile: Dockerfile
+    image: cabinet-gui:latest
+    container_name: cabinet-gui
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/data
+    environment:
+      - STREAMLIT_TELEMETRY_OPT_IN=false

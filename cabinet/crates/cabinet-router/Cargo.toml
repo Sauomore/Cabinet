@@ -1,0 +1,16 @@
+[package]
+name = "cabinet-router"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "路由层：RelRouter 特征码关联权重"
+
+[dependencies]
+cabinet-hsh = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]

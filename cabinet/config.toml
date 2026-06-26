@@ -1,0 +1,25 @@
+version = "1.0"
+
+[memory]
+path = "./agent_memory.db"
+precision = "light"           # "light" | "hybrid" | "precise"
+working_memory_size = 4096
+merge_interval = 1000
+wal_sync = true
+
+[encoding]
+pos_threshold = 50          # 常用词晋升阈值
+sim_threshold = 0.5         # 新簇创建距离阈值 (仅离线)
+embed_dim = 768
+
+[backend]
+type = "sqlite"             # "sqlite" | "rocksdb"
+
+[files]
+cluster_centers = "./assets/cluster_centers.bin"
+seed_table = "./assets/seed_table.bin"
+mapping_table = "./assets/mapping_table.bin"
+
+[log]
+level = "info"              # "trace" | "debug" | "info" | "warn" | "error"
+file = "./cabinet.log"

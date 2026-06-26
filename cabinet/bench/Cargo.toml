@@ -1,0 +1,17 @@
+[package]
+name = "cabinet-bench"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "基准测试"
+
+[[bin]]
+name = "bench"
+path = "src/main.rs"
+
+[dependencies]
+cabinet-core = { workspace = true }
+cabinet-hsh = { workspace = true }
