@@ -148,6 +148,26 @@ impl QueryResult {
     }
 }
 
+/// 记忆库统计信息
+#[derive(Debug, Clone)]
+pub struct MemoryStats {
+    pub doc_count: usize,
+    pub next_doc_id: u64,
+    pub working_memory_capacity: usize,
+    pub working_memory_used: usize,
+    pub token_store_buffer_size: usize,
+    pub precision: String,
+}
+
+/// Drawer 统计信息
+#[derive(Debug, Clone)]
+pub struct DrawerStats {
+    pub feat: u8,
+    pub key_count: usize,
+    pub total_doc_refs: usize,
+    pub keys: Vec<(u16, u32, usize)>, // (key, doc_count, posting_bytes)
+}
+
 /// Memory：核心 API
 pub struct Memory {
     config: Config,
@@ -338,6 +358,41 @@ impl Memory {
         self.merge()?;
         // 后端关闭由 Drop 自动处理
         Ok(())
+    }
+
+    /// 编码文本，返回每个词的 (word, pos, HSHCode)
+    pub fn encode_detail(&self, text: &str) -> Result<Vec<(String, String, HSHCode)>, MemoryError> {
+        self.encoder.encode_detail(text)
+            .map_err(MemoryError::Encode)
+    }
+
+    /// 获取记忆库统计信息
+    pub fn get_stats(&self) -> MemoryStats {
+        MemoryStats {
+            doc_count: self.text_cache.len(),
+            next_doc_id: self.next_doc_id,
+            working_memory_capacity: self.working_memory.max_tokens,
+            working_memory_used: self.working_memory.len(),
+            token_store_buffer_size: self.token_store.len(),
+            precision: format!("{:?}", self.config.precision),
+        }
+    }
+
+    /// 获取指定 Drawer 的统计信息
+    pub fn get_drawer_stats(&self, feat: u8) -> DrawerStats {
+        let drawer = self.archive_index.drawer(feat);
+        let mut keys = Vec::new();
+        let mut total_doc_refs = 0usize;
+        for (key, pl) in &drawer.tree {
+            total_doc_refs += pl.doc_count as usize;
+            keys.push((*key, pl.doc_count, pl.to_bytes().len()));
+        }
+        DrawerStats {
+            feat,
+            key_count: keys.len(),
+            total_doc_refs,
+            keys,
+        }
     }
 
     // 内部：LSM 合并

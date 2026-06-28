@@ -10,17 +10,26 @@ use cabinet_hsh::HSHCode;
 use cabinet_index::posting::PostingList;
 use rusqlite::{params, Connection, OptionalExtension};
 use std::path::Path;
+use std::sync::{Mutex, MutexGuard};
 
 pub struct SQLiteBackend {
-    conn: Connection,
+    conn: Mutex<Connection>,
     config: StoreConfig,
+}
+
+impl SQLiteBackend {
+    fn lock(&self) -> Result<MutexGuard<'_, Connection>, StoreError> {
+        self.conn
+            .lock()
+            .map_err(|e| StoreError::Io(format!("mutex poison: {}", e)))
+    }
 }
 
 impl Backend for SQLiteBackend {
     fn open(path: &Path, config: &StoreConfig) -> Result<Self, StoreError> {
         let conn = Connection::open(path)?;
         let backend = SQLiteBackend {
-            conn,
+            conn: Mutex::new(conn),
             config: config.clone(),
         };
         backend.init_tables()?;
@@ -30,7 +39,7 @@ impl Backend for SQLiteBackend {
     fn append_wal(&self, record: &WalRecord) -> Result<(), StoreError> {
         let hsh_bytes = HSHCode::encode_seq(&record.hsh_seq);
         let checksum = crc32fast::hash(&hsh_bytes);
-        self.conn.execute(
+        self.lock()?.execute(
             "INSERT INTO wal (record_type, timestamp_ms, doc_id, hsh_seq_bytes, checksum)
              VALUES (?1, ?2, ?3, ?4, ?5)",
             params![
@@ -48,8 +57,8 @@ impl Backend for SQLiteBackend {
     }
 
     fn read_wal(&self) -> Result<Vec<WalRecord>, StoreError> {
-        let mut stmt = self
-            .conn
+        let conn = self.lock()?;
+        let mut stmt = conn
             .prepare("SELECT record_type, timestamp_ms, doc_id, hsh_seq_bytes FROM wal ORDER BY seq")?;
         let rows = stmt.query_map([], |row| {
             let rt: u8 = row.get(0)?;
@@ -75,7 +84,7 @@ impl Backend for SQLiteBackend {
 
     fn write_token(&self, doc_id: u64, hsh_seq: &[HSHCode]) -> Result<(), StoreError> {
         let hsh_bytes = HSHCode::encode_seq(hsh_seq);
-        self.conn.execute(
+        self.lock()?.execute(
             "INSERT OR REPLACE INTO docs (id, hsh_seq_bytes, created_at)
              VALUES (?1, ?2, ?3)",
             params![
@@ -98,7 +107,7 @@ impl Backend for SQLiteBackend {
     ) -> Result<(), StoreError> {
         let table = format!("index_drawer_{:02X}", feat);
         let bytes = postings.to_bytes();
-        self.conn.execute(
+        self.lock()?.execute(
             &format!(
                 "INSERT OR REPLACE INTO {} (sim_abs, postings_bytes) VALUES (?1, ?2)",
                 table
@@ -114,7 +123,8 @@ impl Backend for SQLiteBackend {
         key_range: std::ops::Range<u16>,
     ) -> Result<Vec<(u16, PostingList)>, StoreError> {
         let table = format!("index_drawer_{:02X}", feat);
-        let mut stmt = self.conn.prepare(&format!(
+        let conn = self.lock()?;
+        let mut stmt = conn.prepare(&format!(
             "SELECT sim_abs, postings_bytes FROM {}
              WHERE sim_abs BETWEEN ?1 AND ?2
              ORDER BY sim_abs",
@@ -146,7 +156,7 @@ impl Backend for SQLiteBackend {
     }
 
     fn snapshot(&self, dst: &Path) -> Result<(), StoreError> {
-        self.conn.execute(
+        self.lock()?.execute(
             "VACUUM INTO ?1",
             params![dst.to_string_lossy().as_ref()],
         )?;
@@ -155,7 +165,7 @@ impl Backend for SQLiteBackend {
 
     fn read_token(&self, doc_id: u64) -> Result<Option<Vec<HSHCode>>, StoreError> {
         let result: Option<Vec<u8>> = self
-            .conn
+            .lock()?
             .query_row(
                 "SELECT hsh_seq_bytes FROM docs WHERE id = ?1",
                 params![doc_id as i64],
@@ -169,7 +179,7 @@ impl Backend for SQLiteBackend {
 impl SQLiteBackend {
     fn init_tables(&self) -> Result<(), StoreError> {
         // 启用 WAL 模式（SQLite 自带 WAL，与我们的 WAL 表不同）
-        self.conn.execute_batch(
+        self.lock()?.execute_batch(
             "PRAGMA journal_mode = WAL;
              PRAGMA synchronous = FULL;
              CREATE TABLE IF NOT EXISTS meta (
@@ -195,7 +205,7 @@ impl SQLiteBackend {
         // 创建 16 个 drawer 表
         for feat in 0..16u8 {
             let table = format!("index_drawer_{:02X}", feat);
-            self.conn.execute(
+            self.lock()?.execute(
                 &format!(
                     "CREATE TABLE IF NOT EXISTS {} (
                         sim_abs INTEGER PRIMARY KEY,

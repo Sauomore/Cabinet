@@ -187,6 +187,19 @@ impl Encoder {
         Ok(candidate)
     }
 
+    /// 编码文本，返回每个词的 (word, pos, HSHCode) 详细信息
+    pub fn encode_detail(&self, text: &str) -> Result<Vec<(String, String, HSHCode)>, EncodeError> {
+        let tokens = self.jieba.tag(text, true);
+        let mut results = Vec::with_capacity(tokens.len());
+        for token in tokens {
+            let word = token.word.to_string();
+            let pos = token.tag.to_string();
+            let code = self.encode_word(&word, &pos)?;
+            results.push((word, pos, code));
+        }
+        Ok(results)
+    }
+
     /// 添加常用词
     pub fn add_common_word(&mut self, word: &str) {
         self.common_words.insert(word.to_string());
