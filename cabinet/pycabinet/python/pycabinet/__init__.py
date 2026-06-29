@@ -7,7 +7,7 @@ try:
     )
 except ImportError as _e:
     raise ImportError(
-        "pycabinet 的 Rust 扩展未编译。请先在项目根目录运行：\n"
+        "cabinet-hsh 的 Rust 扩展未编译。请先在项目根目录运行：\n"
         "  cd I:\\Cabinet_HSH\\库文件项目\\cabinet\n"
         "  maturin develop   # 开发安装（推荐）\n"
         "  # 或\n"
@@ -22,7 +22,9 @@ __all__ = [
     "Encoder",
     "MemoryStats",
     "DrawerStats",
-    "plot",  # 延迟导入，见下
+    "plot",              # 延迟导入，见下
+    "document_parser",   # 文档解析（延迟导入）
+    "context_decoder",   # 上下文解码（延迟导入）
 ]
 
 
@@ -36,3 +38,21 @@ class _LazyPlot:
 
 
 plot = _LazyPlot()
+
+
+# 文档解析模块延迟导入（避免 pdfplumber/python-docx/openpyxl 硬依赖）
+class _LazyDocParser:
+    """延迟加载 document_parser 模块。"""
+
+    def __getattr__(self, name: str):
+        from pycabinet import document_parser as _dp_module
+        return getattr(_dp_module, name)
+
+
+document_parser = _LazyDocParser()
+
+
+# 上下文解码模块直接导入（无外部依赖，轻量级）
+from pycabinet.context_decoder import decode_context
+
+__all__.append("decode_context")
