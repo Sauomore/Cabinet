@@ -10,9 +10,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ====================
-  # Linux builds
-  # ====================
   linux:
     runs-on: ubuntu-latest
     strategy:
@@ -28,16 +25,14 @@ jobs:
         with:
           target: ${{ matrix.target }}
           manylinux: auto
-          args: --release --out dist
+          command: build
+          args: --release --manifest-path cabinet/pycabinet/Cargo.toml --out dist
           sccache: 'true'
       - uses: actions/upload-artifact@v4
         with:
           name: wheels-linux-${{ matrix.target }}
           path: dist
 
-  # ====================
-  # macOS builds
-  # ====================
   macos:
     runs-on: macos-latest
     steps:
@@ -45,20 +40,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Build wheels (x86_64 + aarch64 universal2)
+      - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: universal2-apple-darwin
-          args: --release --out dist
+          command: build
+          args: --release --manifest-path cabinet/pycabinet/Cargo.toml --out dist
           sccache: 'true'
       - uses: actions/upload-artifact@v4
         with:
           name: wheels-macos-universal2
           path: dist
 
-  # ====================
-  # Windows builds
-  # ====================
   windows:
     runs-on: windows-latest
     strategy:
@@ -74,16 +67,14 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist
+          command: build
+          args: --release --manifest-path cabinet/pycabinet/Cargo.toml --out dist
           sccache: 'true'
       - uses: actions/upload-artifact@v4
         with:
           name: wheels-windows-${{ matrix.target }}
           path: dist
 
-  # ====================
-  # Build sdist
-  # ====================
   sdist:
     runs-on: ubuntu-latest
     steps:
@@ -95,15 +86,12 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           command: sdist
-          args: --out dist
+          args: --manifest-path cabinet/pycabinet/Cargo.toml --out dist
       - uses: actions/upload-artifact@v4
         with:
           name: sdist
           path: dist
 
-  # ====================
-  # Test (Linux x86_64 only for now)
-  # ====================
   test:
     runs-on: ubuntu-latest
     needs: linux
@@ -120,9 +108,6 @@ jobs:
           pip install dist/cabinet_hsh-*.whl
           python -c "import pycabinet; print(pycabinet.__all__)"
 
-  # ====================
-  # Publish to PyPI (only on tag push)
-  # ====================
   publish:
     name: Publish to PyPI
     runs-on: ubuntu-latest
